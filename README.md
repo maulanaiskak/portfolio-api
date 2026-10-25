@@ -1,6 +1,6 @@
 # portfolio-api
 
-Go REST API for my personal site: CV, trips, career milestones and blog posts, backed by Postgres. The frontend lives in [`portfolio-web`](../portfolio-web).
+Go REST API for my personal site: CV, trips, career milestones and blog posts, backed by Postgres, with a JWT-protected admin API and image uploads to Cloudflare R2. The frontend lives in [`portfolio-web`](../portfolio-web). Deployment: see [DEPLOY.md](DEPLOY.md).
 
 ## Architecture
 
@@ -73,6 +73,10 @@ go run ./cmd/server             # http://localhost:8080
 curl -s localhost:8080/api/v1/cv | jq
 ```
 
+In development, uploads are stored in `./uploads` and served at `/uploads/...` (`STORAGE_DRIVER=local`); production uses R2. Set `WEB_REVALIDATE_URL` + `REVALIDATE_SECRET` to make the web app refresh pages instantly after edits.
+
+Tests: `go test ./...`
+
 Reload the CV after editing `seed/cv.json`: `go run ./cmd/seedcv -replace`.
 
 ## Security defaults
@@ -88,4 +92,5 @@ Reload the CV after editing `seed/cv.json`: `go run ./cmd/seedcv -replace`.
 - Login: same error and same bcrypt cost for unknown email vs wrong password (no account enumeration), 5 attempts/min per IP.
 - Uploads: format detected from bytes (not filename/Content-Type), JPEG/PNG/WebP only, ≤40MP, re-encoded server-side, which strips EXIF/GPS metadata (orientation applied first) and caps size at 2560px. Keys are random UUIDs.
 - Strict JSON decoding: unknown fields, trailing data and oversized bodies are rejected.
-- Distroless, non-root container image; secrets come from the host (Fly secrets), never from git.
+- Client IP for rate limiting comes from the edge proxy's own header (`Fly-Client-IP`), not spoofable `X-Forwarded-For`, and only when `TRUST_PROXY=true`.
+- Distroless, non-root container image; secrets come from the host (Fly secrets), never from git. CI runs `go vet`, race tests and `govulncheck`.

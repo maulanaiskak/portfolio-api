@@ -24,6 +24,7 @@ type cvService struct {
 	educationRepo  repository.CvEducationRepository
 	skillRepo      repository.CvSkillRepository
 	tx             repository.Transactor
+	cache          repository.WebCache
 }
 
 func (s *cvService) GetCv(ctx context.Context) (entity.Cv, error) {
@@ -102,6 +103,9 @@ func (s *cvService) ImportCv(ctx context.Context, cv entity.Cv, replace bool) (e
 		}
 		return nil
 	})
+	if err == nil {
+		s.cache.Invalidate("cv")
+	}
 	return counts, err
 }
 
@@ -201,6 +205,7 @@ func NewCvService(
 	educationRepo repository.CvEducationRepository,
 	skillRepo repository.CvSkillRepository,
 	tx repository.Transactor,
+	cache repository.WebCache,
 ) CvService {
 	return &cvService{
 		experienceRepo: experienceRepo,
@@ -208,5 +213,6 @@ func NewCvService(
 		educationRepo:  educationRepo,
 		skillRepo:      skillRepo,
 		tx:             tx,
+		cache:          cache,
 	}
 }

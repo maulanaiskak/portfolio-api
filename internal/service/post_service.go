@@ -21,9 +21,20 @@ type PostService interface {
 }
 
 type postService struct {
-	repo repository.PostRepository
-	tx   repository.Transactor
-	now  func() time.Time
+	repo  repository.PostRepository
+	tx    repository.Transactor
+	cache repository.WebCache
+	now   func() time.Time
+}
+
+func (s *postService) invalidate(slugs ...string) {
+	tags := []string{"posts"}
+	for _, slug := range slugs {
+		if slug != "" {
+			tags = append(tags, "post:"+slug)
+		}
+	}
+	s.cache.Invalidate(tags...)
 }
 
 func (s *postService) ListPublished(ctx context.Context, page Page, tag string) ([]entity.Post, int, error) {
@@ -52,26 +63,43 @@ func (s *postService) Create(ctx context.Context, p entity.Post) (entity.Post, e
 	if err := s.normalize(&p); err != nil {
 		return p, err
 	}
-	return p, s.repo.Create(ctx, &p)
+	if err := s.repo.Create(ctx, &p); err != nil {
+		return p, err
+	}
+	s.invalidate(p.Slug)
+	return p, nil
 }
 
 func (s *postService) Update(ctx context.Context, p entity.Post) (entity.Post, error) {
+	var oldSlug string
 	err := s.tx.WithinTx(ctx, func(ctx context.Context) error {
 		stored, err := s.repo.FindByID(ctx, p.ID)
 		if err != nil {
 			return err
 		}
+		oldSlug = stored.Slug
 		keepImmutable(&p.Content, stored.Content)
 		if err := s.normalize(&p); err != nil {
 			return err
 		}
 		return s.repo.Update(ctx, &p)
 	})
+	if err == nil {
+		s.invalidate(oldSlug, p.Slug)
+	}
 	return p, err
 }
 
 func (s *postService) Delete(ctx context.Context, id int64) error {
-	return s.repo.Delete(ctx, id)
+	stored, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+	s.invalidate(stored.Slug)
+	return nil
 }
 
 func (s *postService) normalize(p *entity.Post) error {
@@ -99,6 +127,6 @@ func (s *postService) normalize(p *entity.Post) error {
 	return v.err()
 }
 
-func NewPostService(repo repository.PostRepository, tx repository.Transactor) PostService {
-	return &postService{repo: repo, tx: tx, now: time.Now}
+func NewPostService(repo repository.PostRepository, tx repository.Transactor, cache repository.WebCache) PostService {
+	return &postService{repo: repo, tx: tx, cache: cache, now: time.Now}
 }

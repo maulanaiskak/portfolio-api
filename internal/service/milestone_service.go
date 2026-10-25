@@ -21,9 +21,20 @@ type MilestoneService interface {
 }
 
 type milestoneService struct {
-	repo repository.MilestoneRepository
-	tx   repository.Transactor
-	now  func() time.Time
+	repo  repository.MilestoneRepository
+	tx    repository.Transactor
+	cache repository.WebCache
+	now   func() time.Time
+}
+
+func (s *milestoneService) invalidate(slugs ...string) {
+	tags := []string{"milestones"}
+	for _, slug := range slugs {
+		if slug != "" {
+			tags = append(tags, "milestone:"+slug)
+		}
+	}
+	s.cache.Invalidate(tags...)
 }
 
 func (s *milestoneService) ListPublished(ctx context.Context, page Page) ([]entity.Milestone, int, error) {
@@ -46,26 +57,43 @@ func (s *milestoneService) Create(ctx context.Context, m entity.Milestone) (enti
 	if err := s.normalize(&m); err != nil {
 		return m, err
 	}
-	return m, s.repo.Create(ctx, &m)
+	if err := s.repo.Create(ctx, &m); err != nil {
+		return m, err
+	}
+	s.invalidate(m.Slug)
+	return m, nil
 }
 
 func (s *milestoneService) Update(ctx context.Context, m entity.Milestone) (entity.Milestone, error) {
+	var oldSlug string
 	err := s.tx.WithinTx(ctx, func(ctx context.Context) error {
 		stored, err := s.repo.FindByID(ctx, m.ID)
 		if err != nil {
 			return err
 		}
+		oldSlug = stored.Slug
 		keepImmutable(&m.Content, stored.Content)
 		if err := s.normalize(&m); err != nil {
 			return err
 		}
 		return s.repo.Update(ctx, &m)
 	})
+	if err == nil {
+		s.invalidate(oldSlug, m.Slug)
+	}
 	return m, err
 }
 
 func (s *milestoneService) Delete(ctx context.Context, id int64) error {
-	return s.repo.Delete(ctx, id)
+	stored, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+	s.invalidate(stored.Slug)
+	return nil
 }
 
 func (s *milestoneService) normalize(m *entity.Milestone) error {
@@ -78,6 +106,6 @@ func (s *milestoneService) normalize(m *entity.Milestone) error {
 	return v.err()
 }
 
-func NewMilestoneService(repo repository.MilestoneRepository, tx repository.Transactor) MilestoneService {
-	return &milestoneService{repo: repo, tx: tx, now: time.Now}
+func NewMilestoneService(repo repository.MilestoneRepository, tx repository.Transactor, cache repository.WebCache) MilestoneService {
+	return &milestoneService{repo: repo, tx: tx, cache: cache, now: time.Now}
 }

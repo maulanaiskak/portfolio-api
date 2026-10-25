@@ -28,9 +28,21 @@ type TripService interface {
 }
 
 type tripService struct {
-	repo repository.TripRepository
-	tx   repository.Transactor
-	now  func() time.Time
+	repo  repository.TripRepository
+	tx    repository.Transactor
+	cache repository.WebCache
+	now   func() time.Time
+}
+
+// invalidate refreshes the public list and each given trip page.
+func (s *tripService) invalidate(slugs ...string) {
+	tags := []string{"trips"}
+	for _, slug := range slugs {
+		if slug != "" {
+			tags = append(tags, "trip:"+slug)
+		}
+	}
+	s.cache.Invalidate(tags...)
 }
 
 func (s *tripService) ListPublished(ctx context.Context, page Page) ([]entity.Trip, int, error) {
@@ -67,15 +79,18 @@ func (s *tripService) Create(ctx context.Context, t entity.Trip) (entity.Trip, e
 		return t, err
 	}
 	t.Photos = []entity.TripPhoto{}
+	s.invalidate(t.Slug)
 	return t, nil
 }
 
 func (s *tripService) Update(ctx context.Context, t entity.Trip) (entity.Trip, error) {
+	var oldSlug string
 	err := s.tx.WithinTx(ctx, func(ctx context.Context) error {
 		stored, err := s.repo.FindByID(ctx, t.ID)
 		if err != nil {
 			return err
 		}
+		oldSlug = stored.Slug
 		keepImmutable(&t.Content, stored.Content)
 		if err := s.normalize(&t); err != nil {
 			return err
@@ -86,11 +101,29 @@ func (s *tripService) Update(ctx context.Context, t entity.Trip) (entity.Trip, e
 		t.Photos, err = s.repo.ListPhotos(ctx, t.ID)
 		return err
 	})
+	if err == nil {
+		s.invalidate(oldSlug, t.Slug)
+	}
 	return t, err
 }
 
 func (s *tripService) Delete(ctx context.Context, id int64) error {
-	return s.repo.Delete(ctx, id)
+	t, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+	s.invalidate(t.Slug)
+	return nil
+}
+
+// invalidateTrip refreshes the page of the trip that owns a photo.
+func (s *tripService) invalidateTrip(ctx context.Context, tripID int64) {
+	if t, err := s.repo.FindByID(ctx, tripID); err == nil {
+		s.invalidate(t.Slug)
+	}
 }
 
 func (s *tripService) AddPhoto(ctx context.Context, p entity.TripPhoto) (entity.TripPhoto, error) {
@@ -114,6 +147,9 @@ func (s *tripService) AddPhoto(ctx context.Context, p entity.TripPhoto) (entity.
 		}
 		return s.repo.CreatePhoto(ctx, &p)
 	})
+	if err == nil {
+		s.invalidateTrip(ctx, p.TripID)
+	}
 	return p, err
 }
 
@@ -121,11 +157,19 @@ func (s *tripService) UpdatePhoto(ctx context.Context, p entity.TripPhoto) (enti
 	if err := validatePhoto(&p, false); err != nil {
 		return p, err
 	}
-	return p, s.repo.UpdatePhoto(ctx, &p)
+	if err := s.repo.UpdatePhoto(ctx, &p); err != nil {
+		return p, err
+	}
+	s.invalidateTrip(ctx, p.TripID)
+	return p, nil
 }
 
 func (s *tripService) DeletePhoto(ctx context.Context, tripID, photoID int64) error {
-	return s.repo.DeletePhoto(ctx, tripID, photoID)
+	if err := s.repo.DeletePhoto(ctx, tripID, photoID); err != nil {
+		return err
+	}
+	s.invalidateTrip(ctx, tripID)
+	return nil
 }
 
 func (s *tripService) normalize(t *entity.Trip) error {
@@ -160,6 +204,6 @@ func validatePhoto(p *entity.TripPhoto, requireURL bool) error {
 	return v.err()
 }
 
-func NewTripService(repo repository.TripRepository, tx repository.Transactor) TripService {
-	return &tripService{repo: repo, tx: tx, now: time.Now}
+func NewTripService(repo repository.TripRepository, tx repository.Transactor, cache repository.WebCache) TripService {
+	return &tripService{repo: repo, tx: tx, cache: cache, now: time.Now}
 }

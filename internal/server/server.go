@@ -36,6 +36,7 @@ type Services struct {
 // and the given object storage. Shared by the HTTP server and CLI commands.
 func NewServices(cfg config.Config, pool *pgxpool.Pool, storage repository.ObjectStorage) Services {
 	tx := repository.NewTransactor(pool)
+	cache := repository.NewWebCache(cfg.WebRevalidateURL, cfg.RevalidateSecret)
 	adminRepo := repository.NewAdminUserRepository(pool)
 	return Services{
 		Cv: service.NewCvService(
@@ -44,12 +45,13 @@ func NewServices(cfg config.Config, pool *pgxpool.Pool, storage repository.Objec
 			repository.NewCvEducationRepository(pool),
 			repository.NewCvSkillRepository(pool),
 			tx,
+			cache,
 		),
 		AdminUser: service.NewAdminUserService(adminRepo, tx),
 		Auth:      service.NewAuthService(adminRepo, security.NewTokenManager(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTTTL)),
-		Trip:      service.NewTripService(repository.NewTripRepository(pool), tx),
-		Milestone: service.NewMilestoneService(repository.NewMilestoneRepository(pool), tx),
-		Post:      service.NewPostService(repository.NewPostRepository(pool), tx),
+		Trip:      service.NewTripService(repository.NewTripRepository(pool), tx, cache),
+		Milestone: service.NewMilestoneService(repository.NewMilestoneRepository(pool), tx, cache),
+		Post:      service.NewPostService(repository.NewPostRepository(pool), tx, cache),
 		Upload:    service.NewUploadService(storage, cfg.MaxUploadBytes),
 	}
 }
@@ -71,7 +73,7 @@ func NewRouter(cfg config.Config, pool *pgxpool.Pool, svc Services, localFiles h
 	r := chi.NewRouter()
 
 	if cfg.TrustProxy {
-		r.Use(chimw.RealIP)
+		r.Use(middleware.ClientIP(cfg.ClientIPHeader))
 	}
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RequestLogger)

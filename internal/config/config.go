@@ -21,9 +21,10 @@ type ApiConfig struct {
 	MaxBodyBytes      int64
 	// Requests per minute allowed per client IP on public routes.
 	RateLimitPerMinute int
-	// When true, X-Forwarded-For / X-Real-IP are trusted for client IP
-	// (only enable behind a proxy you control, e.g. Fly.io's edge).
-	TrustProxy bool
+	// When true, the client IP is read from ClientIPHeader, which the edge
+	// proxy must overwrite on every request (Fly.io: Fly-Client-IP).
+	TrustProxy     bool
+	ClientIPHeader string
 }
 
 type DbConfig struct {
@@ -35,6 +36,13 @@ type DbConfig struct {
 
 type CorsConfig struct {
 	AllowedOrigins []string
+}
+
+// WebConfig lets the API ask the Next.js frontend to drop cached pages after
+// content changes. Optional: without it, pages refresh within the ISR window.
+type WebConfig struct {
+	WebRevalidateURL string
+	RevalidateSecret string
 }
 
 type AdminConfig struct {
@@ -70,6 +78,7 @@ type Config struct {
 	ApiConfig
 	DbConfig
 	CorsConfig
+	WebConfig
 	AdminConfig
 	AuthConfig
 	StorageConfig
@@ -96,6 +105,7 @@ func NewConfig() (Config, error) {
 			MaxBodyBytes:       int64(getEnvInt("MAX_BODY_BYTES", 1<<20)),
 			RateLimitPerMinute: getEnvInt("RATE_LIMIT_PER_MINUTE", 120),
 			TrustProxy:         getEnvBool("TRUST_PROXY", false),
+			ClientIPHeader:     getEnv("CLIENT_IP_HEADER", "Fly-Client-IP"),
 		},
 		DbConfig: DbConfig{
 			DataSourceName:  os.Getenv("DATABASE_URL"),
@@ -105,6 +115,10 @@ func NewConfig() (Config, error) {
 		},
 		CorsConfig: CorsConfig{
 			AllowedOrigins: splitCSV(os.Getenv("CORS_ORIGIN")),
+		},
+		WebConfig: WebConfig{
+			WebRevalidateURL: strings.TrimSpace(os.Getenv("WEB_REVALIDATE_URL")),
+			RevalidateSecret: os.Getenv("REVALIDATE_SECRET"),
 		},
 		AdminConfig: AdminConfig{
 			Email:              strings.TrimSpace(os.Getenv("ADMIN_EMAIL")),
@@ -162,6 +176,9 @@ func (c Config) validate() error {
 	}
 	if c.JWTTTL <= 0 || c.JWTTTL > 7*24*time.Hour {
 		errs = append(errs, errors.New("JWT_TTL_HOURS must be between 1 and 168"))
+	}
+	if c.WebRevalidateURL != "" && len(c.RevalidateSecret) < 32 {
+		errs = append(errs, errors.New("REVALIDATE_SECRET must be at least 32 bytes when WEB_REVALIDATE_URL is set"))
 	}
 	switch c.Driver {
 	case "local":
