@@ -1,0 +1,264 @@
+{
+  "experience": [
+    {
+      "company": "Nanovest",
+      "location": "Jakarta, Indonesia (Remote)",
+      "position": "Backend Engineer",
+      "period": "Jul 2025 – Present",
+      "responsibilities": [
+        {
+          "period": "Asset Team",
+          "description": "Regulated Indonesian investment platform where ~5M registered users trade US stocks, crypto and gold in one app, from fractional US shares to on-chain token swaps."
+        }
+      ],
+      "projectsAndAchievements": [
+        "Led the backend launch of the Web3 swap product, a new revenue channel with 180K+ tokens on Ethereum, Base, BNB Chain and Solana, built on event-driven Spring Boot and Pub/Sub, bundling each swap and transfer into one on-chain transaction, with a Redis-locked ledger to prevent double charges and auto-recovery of stuck swaps.",
+        "Led the regulatory reporting migration for trades, transfers and staking to a new crypto exchange and clearing house, sustaining a 99.8% reporting success rate with a Cloud Scheduler job, Redis locking and auto-resubmission of failures.",
+        "Cut new approval-flow build time by ~60% by designing a shared maker-checker service in Spring Boot and PostgreSQL, with a state machine and audit history, built to replace 4 separate implementations.",
+        "Reduced market data subscription costs by ~20% by replacing per-ticker on-demand refreshes with a Spring Scheduler batch job with a Redis lock and Spring Cache, eliminating duplicate requests to the data provider.",
+        "Removed a single point of failure in the Go real-time price service by isolating 5 exchange WebSocket feeds into independent, self-healing connections, so one exchange outage no longer stops prices for the whole app.",
+        "Mentored 2 engineering interns to independently own production code through design discussions and code reviews, and paired with a frontend engineer moving to backend."
+      ],
+      "tech": ["Java", "Spring Boot", "Go", "PostgreSQL", "Redis", "Pub/Sub", "Cloud Scheduler", "Spring Cache", "WebSocket", "Ethereum", "Base", "BNB Chain", "Solana"]
+    },
+    {
+      "company": "Nanovest",
+      "location": "Jakarta, Indonesia (Remote)",
+      "position": "Junior Backend Engineer",
+      "period": "May 2023 – Jun 2025",
+      "responsibilities": [
+        {
+          "period": "Account Security Team",
+          "description": "Focused on the account and identity domain, handling authentication, KYC, fraud detection, and risk management."
+        }
+      ],
+      "projectsAndAchievements": [
+        "Turned 39.6% of low-confidence KYC rejections into approvals by re-architecting a synchronous verification flow into an async Pub/Sub pipeline across 4 identity vendors with face-search fallback, ending manual resubmission.",
+        "Cut 2FA-reset support tickets by ~78% by replacing a manual process with a self-service Spring Boot flow that verifies users step by step, from OTP to ID number, with short-lived tokens that block skipped steps.",
+        "Migrated ~5M users' core identity data from Datastore to PostgreSQL with zero downtime, moving read-heavy traffic off Datastore's per-operation pricing via feature-flagged dual writes and batch backfill, and enabling relational joins.",
+        "Enabled fee discounts and priority support for high-value investors by designing a daily tiering pipeline over ~5M users as a GKE CronJob with keyset pagination, combining asset balances with trading volume."
+      ],
+      "tech": ["Java", "Spring Boot", "PostgreSQL", "Datastore", "Pub/Sub", "Redis", "GKE"]
+    },
+    {
+      "company": "TechConnect",
+      "location": "Jakarta, Indonesia (Remote)",
+      "position": "Software Engineer - Development Program",
+      "period": "May 2022 – Apr 2023",
+      "responsibilities": [
+        {
+          "period": "Development Program",
+          "description": "Enterprise technology arm of Sinar Mas Mining, part of Indonesia's Sinar Mas conglomerate."
+        }
+      ],
+      "projectsAndAchievements": [
+        "Led backend development of Alerta, an in-house incident management platform in Go, PostgreSQL and Redis with two-way Jira sync and Slack alerts, built as an Opsgenie alternative with a business case projecting ~95% lower monthly cost.",
+        "Raised unit test coverage from 0% to 94% with Testify and moved Alerta from a single VM to Kubernetes (GKE) and managed GCP services, using Docker, Helm, Terraform and Cloud Build.",
+        "Restored valid user requests that were silently rejected by a stale distributed lock in Java/Spring Boot authentication services, diagnosing the root cause as a missed lock-release path."
+      ],
+      "tech": ["Go", "PostgreSQL", "Redis", "Java", "Spring Boot", "Kubernetes (GKE)", "Docker", "Helm", "Terraform", "Cloud Build", "Testify", "Jira API", "Slack API"]
+    }
+  ],
+  "projects": [
+    {
+      "title": "Web3 Swap Product",
+      "description": "Led the backend launch of a new revenue channel: on-chain token swaps across Ethereum, Base, BNB Chain and Solana, built on event-driven Spring Boot and Pub/Sub.",
+      "technologies": ["Java", "Spring Boot", "Pub/Sub", "Redis", "Ethereum", "Base", "BNB Chain", "Solana"],
+      "image": "wallet.png",
+      "highlights": [
+        "180K+ tokens across 4 chains",
+        "Each swap and transfer bundled into one on-chain transaction",
+        "Redis-locked ledger prevents double charges",
+        "Auto-recovery of stuck swaps"
+      ]
+    },
+    {
+      "title": "Regulatory Reporting Migration",
+      "description": "Led the migration of trade, transfer and staking reporting to a new crypto exchange and clearing house.",
+      "technologies": ["Java", "Spring Boot", "Cloud Scheduler", "Redis", "PostgreSQL"],
+      "image": "reporting.png",
+      "highlights": [
+        "99.8% reporting success rate",
+        "Cloud Scheduler job with Redis locking",
+        "Automatic resubmission of failed reports"
+      ]
+    },
+    {
+      "title": "Shared Maker-Checker Service",
+      "description": "Designed one approval service with a state machine and audit history to replace 4 separate maker-checker implementations.",
+      "technologies": ["Java", "Spring Boot", "PostgreSQL"],
+      "image": "approval.png",
+      "highlights": [
+        "~60% faster to build new approval flows",
+        "State machine with full audit history",
+        "Replaced 4 separate implementations"
+      ]
+    },
+    {
+      "title": "Resilient Real-Time Price Service",
+      "description": "Removed a single point of failure in the Go price service by isolating each exchange WebSocket feed into its own self-healing connection.",
+      "technologies": ["Go", "WebSocket"],
+      "image": "prices.png",
+      "highlights": [
+        "5 exchange feeds isolated from each other",
+        "Self-healing connections",
+        "One exchange outage no longer stops prices app-wide"
+      ]
+    },
+    {
+      "title": "KYC Async Verification Pipeline",
+      "description": "Re-architected a synchronous KYC verification flow into an async Pub/Sub pipeline across 4 identity vendors with face-search fallback.",
+      "technologies": ["Java", "Spring Boot", "Pub/Sub", "PostgreSQL"],
+      "image": "kyc.png",
+      "highlights": [
+        "39.6% of low-confidence rejections turned into approvals",
+        "4 identity vendors with face-search fallback",
+        "Ended manual resubmission"
+      ]
+    },
+    {
+      "title": "Self-Service 2FA Reset",
+      "description": "Replaced a manual 2FA reset process with a self-service flow that verifies users step by step, from OTP to ID number.",
+      "technologies": ["Java", "Spring Boot", "PostgreSQL"],
+      "image": "auth.png",
+      "highlights": [
+        "~78% fewer 2FA-reset support tickets",
+        "Step-by-step verification from OTP to ID number",
+        "Short-lived tokens block skipped steps"
+      ]
+    },
+    {
+      "title": "Zero-Downtime Datastore → PostgreSQL Migration",
+      "description": "Migrated ~5M users' core identity data from Datastore to PostgreSQL, moving read-heavy traffic off per-operation pricing and enabling relational joins.",
+      "technologies": ["Java", "Spring Boot", "Datastore", "PostgreSQL"],
+      "image": "migration.png",
+      "highlights": [
+        "~5M users migrated with zero downtime",
+        "Feature-flagged dual writes",
+        "Batch backfill",
+        "Enabled relational joins"
+      ]
+    },
+    {
+      "title": "User Tiering Pipeline",
+      "description": "Daily tiering pipeline over ~5M users that combines asset balances with trading volume, enabling fee discounts and priority support for high-value investors.",
+      "technologies": ["Java", "Spring Boot", "GKE", "PostgreSQL"],
+      "image": "tiering.png",
+      "highlights": [
+        "~5M users processed daily",
+        "Runs as a GKE CronJob",
+        "Keyset pagination"
+      ]
+    },
+    {
+      "title": "Alerta — Incident Management Platform",
+      "description": "Led backend development of an in-house incident management platform built as an Opsgenie alternative, with two-way Jira sync and Slack alerts.",
+      "technologies": ["Go", "PostgreSQL", "Redis", "Kubernetes (GKE)", "Docker", "Helm", "Terraform", "Cloud Build"],
+      "image": "alerta.png",
+      "highlights": [
+        "Business case projecting ~95% lower monthly cost",
+        "Two-way Jira sync and Slack alerts",
+        "Unit test coverage raised from 0% to 94%",
+        "Moved from a single VM to GKE and managed GCP services"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Universitas Gadjah Mada",
+      "location": "Yogyakarta, Indonesia",
+      "degree": "Bachelor of Engineering in Engineering Physics",
+      "period": "Aug 2017 – Oct 2021",
+      "gpa": "3.63 / 4.00 (Cum Laude)",
+      "thesis": "Online fault detection for industrial control valves, training a random forest on control-loop data streamed over MQTT, with a real-time sliding-window pipeline and a live monitoring view.",
+      "thesis_link": "https://etd.repository.ugm.ac.id/penelitian/detail/205215"
+    }
+  ],
+  "skills": [
+    {
+      "category": "Programming",
+      "items": [
+        { "name": "Java 21", "level": 90 },
+        { "name": "Go (Golang)", "level": 75 },
+        { "name": "SQL", "level": 85 }
+      ]
+    },
+    {
+      "category": "Frameworks",
+      "items": [
+        { "name": "Spring Boot", "level": 90 },
+        { "name": "Spring Data JPA", "level": 85 },
+        { "name": "Hibernate", "level": 85 },
+        { "name": "Spring Cache", "level": 80 },
+        { "name": "Resilience4j", "level": 70 },
+        { "name": "Gin", "level": 75 }
+      ]
+    },
+    {
+      "category": "Data & Messaging",
+      "items": [
+        { "name": "PostgreSQL", "level": 88 },
+        { "name": "Redis", "level": 82 },
+        { "name": "Google Pub/Sub", "level": 85 }
+      ]
+    },
+    {
+      "category": "Cloud & DevOps",
+      "items": [
+        { "name": "GCP (GKE, Cloud SQL, Memorystore)", "level": 85 },
+        { "name": "Kubernetes", "level": 72 },
+        { "name": "Docker", "level": 78 },
+        { "name": "Helm", "level": 70 },
+        { "name": "Terraform", "level": 68 },
+        { "name": "Datadog", "level": 72 },
+        { "name": "Git", "level": 90 },
+        { "name": "SonarQube", "level": 65 }
+      ]
+    },
+    {
+      "category": "Architecture",
+      "items": [
+        { "name": "Microservices", "level": 88 },
+        { "name": "Distributed Systems", "level": 90 },
+        { "name": "Event-Driven Architecture", "level": 90 },
+        { "name": "REST APIs", "level": 90 },
+        { "name": "Idempotency", "level": 85 },
+        { "name": "State Machines", "level": 80 }
+      ]
+    },
+    {
+      "category": "Web3",
+      "items": [
+        { "name": "Ethereum (EVM)", "level": 78 },
+        { "name": "Base", "level": 75 },
+        { "name": "BNB Chain", "level": 75 },
+        { "name": "Solana", "level": 78 },
+        { "name": "DEX Swaps", "level": 78 }
+      ]
+    },
+    {
+      "category": "Spoken Languages",
+      "items": [
+        { "name": "English", "level": 85, "note": "C1 · TOEFL iBT 5.0/6.0 · TOEIC 885" },
+        { "name": "Japanese", "level": 45, "note": "JLPT N3" },
+        { "name": "Indonesian", "level": 100, "note": "Native" }
+      ]
+    },
+    {
+      "category": "Certifications",
+      "items": [
+        {
+          "name": "Google Cloud Certified Professional Cloud Architect",
+          "level": 100,
+          "note": "Feb 2026",
+          "link": "https://www.credly.com/badges/ff058f44-ec1e-4757-89a7-e6337e249e6c/linked_in_profile"
+        },
+        {
+          "name": "Google Cloud Certified Associate Cloud Engineer",
+          "level": 100,
+          "note": "Sep 2024"
+        }
+      ]
+    }
+  ]
+}

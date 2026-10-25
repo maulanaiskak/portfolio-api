@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+/bin/
+legacy-cv.json
+.DS_Store

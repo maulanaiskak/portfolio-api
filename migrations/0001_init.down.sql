@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS blog_posts;
+DROP TABLE IF EXISTS career_milestones;
+DROP TABLE IF EXISTS trip_photos;
+DROP TABLE IF EXISTS trips;
+DROP TABLE IF EXISTS cv_skill_items;
+DROP TABLE IF EXISTS cv_skill_categories;
+DROP TABLE IF EXISTS cv_education;
+DROP TABLE IF EXISTS cv_projects;
+DROP TABLE IF EXISTS cv_experiences;
+DROP TABLE IF EXISTS admin_users;
+DROP FUNCTION IF EXISTS set_updated_at();
