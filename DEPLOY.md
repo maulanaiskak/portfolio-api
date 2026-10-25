@@ -4,7 +4,7 @@ Production layout, all on free tiers: **portfolio-api** on Render (Docker, Singa
 
 Public names used below (adjust if Render or Vercel gives you a different one):
 
-- **API**: `https://maulanaiskak-api.onrender.com` (service `name` in `render.yaml`)
+- **API**: `https://portfolio-api-89p5.onrender.com` (Render adds a random suffix when the name is taken)
 - **Web**: `https://<web-project>.vercel.app`, or your own domain later
 
 Free-tier trade-offs: the Render service sleeps after ~15 minutes without traffic and takes ~30–60 s to wake; Neon suspends idle compute and wakes in about a second. Public pages are served from Vercel's ISR cache, so visitors rarely notice; the first admin request after a quiet period is slow.
@@ -53,16 +53,17 @@ openssl rand -hex 32
 | `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | from the R2 token |
 | `R2_PUBLIC_BASE_URL` | `https://pub-….r2.dev` |
 
+   If you create the service as a plain **Web Service** instead (Docker, region Singapore, plan Free, health check `/healthz`), the fixed values in `render.yaml` are not applied; add them yourself: `APP_ENV=production`, `STORAGE_DRIVER=r2`, `R2_BUCKET`, `TRUST_PROXY=true`, `CLIENT_IP_HEADER=CF-Connecting-IP`, `DB_MAX_CONNS=5`, and `JWT_SECRET` (`openssl rand -base64 48`). The boot log must say `"env":"production"`.
 3. **Apply**. The first build takes a few minutes. Check it:
 
 ```bash
-curl https://maulanaiskak-api.onrender.com/healthz
+curl https://portfolio-api-89p5.onrender.com/healthz
 ```
 
 Seed the CV through the admin API (prompts for the admin password; replaces any stored CV):
 
 ```bash
-scripts/seed-remote.sh https://maulanaiskak-api.onrender.com you@example.com
+scripts/seed-remote.sh https://portfolio-api-89p5.onrender.com you@example.com
 ```
 
 ### Deploys
@@ -82,7 +83,7 @@ Import `maulanaiskak/portfolio-web` at vercel.com/new (framework Next.js, defaul
 
 | Variable | Value |
 |---|---|
-| `NEXT_PUBLIC_API_BASE_URL` | `https://maulanaiskak-api.onrender.com` |
+| `NEXT_PUBLIC_API_BASE_URL` | `https://portfolio-api-89p5.onrender.com` |
 | `NEXT_PUBLIC_IMAGE_ORIGINS` | same as `R2_PUBLIC_BASE_URL` |
 | `NEXT_PUBLIC_SITE_URL` | `https://<web-project>.vercel.app` |
 | `REVALIDATE_SECRET` | same as the API (mark **Sensitive**) |

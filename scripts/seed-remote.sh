@@ -2,7 +2,7 @@
 # Seeds the CV on a deployed API through the admin endpoint (PUT /api/v1/admin/cv),
 # so no database tunnel is needed. Replaces whatever CV is stored.
 #
-#   scripts/seed-remote.sh https://maulanaiskak-api.onrender.com you@example.com [seed/cv.json]
+#   scripts/seed-remote.sh https://portfolio-api-89p5.onrender.com you@example.com [seed/cv.json]
 set -euo pipefail
 
 API="${1:?usage: seed-remote.sh <api-base-url> <admin-email> [cv.json]}"
