@@ -42,12 +42,37 @@ type AdminConfig struct {
 	PasswordBcryptHash string
 }
 
+type AuthConfig struct {
+	JWTSecret []byte
+	JWTTTL    time.Duration
+	JWTIssuer string
+	// Login attempts allowed per client IP per minute.
+	LoginRateLimitPerMinute int
+}
+
+type StorageConfig struct {
+	// "local" (dev: files on disk, served by this API) or "r2".
+	Driver         string
+	MaxUploadBytes int64
+	// Local driver.
+	UploadDir     string
+	PublicBaseURL string // e.g. http://localhost:8080, used to build file URLs
+	// R2 driver (S3-compatible).
+	R2Endpoint        string
+	R2AccessKeyID     string
+	R2SecretAccessKey string
+	R2Bucket          string
+	R2PublicBaseURL   string // public bucket URL or custom domain
+}
+
 type Config struct {
 	Env string
 	ApiConfig
 	DbConfig
 	CorsConfig
 	AdminConfig
+	AuthConfig
+	StorageConfig
 }
 
 func (c Config) IsProduction() bool {
@@ -64,8 +89,8 @@ func NewConfig() (Config, error) {
 		ApiConfig: ApiConfig{
 			Port:               getEnv("PORT", "8080"),
 			ReadHeaderTimeout:  5 * time.Second,
-			ReadTimeout:        15 * time.Second,
-			WriteTimeout:       15 * time.Second,
+			ReadTimeout:        30 * time.Second, // image uploads on slow links
+			WriteTimeout:       30 * time.Second,
 			IdleTimeout:        60 * time.Second,
 			ShutdownTimeout:    10 * time.Second,
 			MaxBodyBytes:       int64(getEnvInt("MAX_BODY_BYTES", 1<<20)),
@@ -84,6 +109,23 @@ func NewConfig() (Config, error) {
 		AdminConfig: AdminConfig{
 			Email:              strings.TrimSpace(os.Getenv("ADMIN_EMAIL")),
 			PasswordBcryptHash: strings.TrimSpace(os.Getenv("ADMIN_PASSWORD_BCRYPT_HASH")),
+		},
+		AuthConfig: AuthConfig{
+			JWTSecret:               []byte(os.Getenv("JWT_SECRET")),
+			JWTTTL:                  time.Duration(getEnvInt("JWT_TTL_HOURS", 24)) * time.Hour,
+			JWTIssuer:               getEnv("JWT_ISSUER", "portfolio-api"),
+			LoginRateLimitPerMinute: getEnvInt("LOGIN_RATE_LIMIT_PER_MINUTE", 5),
+		},
+		StorageConfig: StorageConfig{
+			Driver:            getEnv("STORAGE_DRIVER", "local"),
+			MaxUploadBytes:    int64(getEnvInt("MAX_UPLOAD_BYTES", 15<<20)),
+			UploadDir:         getEnv("UPLOAD_DIR", "./uploads"),
+			PublicBaseURL:     strings.TrimRight(getEnv("PUBLIC_BASE_URL", "http://localhost:8080"), "/"),
+			R2Endpoint:        os.Getenv("R2_ENDPOINT"),
+			R2AccessKeyID:     os.Getenv("R2_ACCESS_KEY_ID"),
+			R2SecretAccessKey: os.Getenv("R2_SECRET_ACCESS_KEY"),
+			R2Bucket:          os.Getenv("R2_BUCKET"),
+			R2PublicBaseURL:   strings.TrimRight(os.Getenv("R2_PUBLIC_BASE_URL"), "/"),
 		},
 	}
 
@@ -113,6 +155,25 @@ func (c Config) validate() error {
 	}
 	if c.MaxBodyBytes <= 0 {
 		errs = append(errs, fmt.Errorf("MAX_BODY_BYTES must be positive"))
+	}
+	// HS256 key must be at least as long as the hash output.
+	if len(c.JWTSecret) < 32 {
+		errs = append(errs, errors.New("JWT_SECRET must be at least 32 bytes (generate with: openssl rand -base64 48)"))
+	}
+	if c.JWTTTL <= 0 || c.JWTTTL > 7*24*time.Hour {
+		errs = append(errs, errors.New("JWT_TTL_HOURS must be between 1 and 168"))
+	}
+	switch c.Driver {
+	case "local":
+		if c.IsProduction() {
+			errs = append(errs, errors.New("STORAGE_DRIVER=local is for development; use r2 in production"))
+		}
+	case "r2":
+		if c.R2Endpoint == "" || c.R2AccessKeyID == "" || c.R2SecretAccessKey == "" || c.R2Bucket == "" || c.R2PublicBaseURL == "" {
+			errs = append(errs, errors.New("STORAGE_DRIVER=r2 requires R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET and R2_PUBLIC_BASE_URL"))
+		}
+	default:
+		errs = append(errs, fmt.Errorf("STORAGE_DRIVER must be local or r2, got %q", c.Driver))
 	}
 	return errors.Join(errs...)
 }

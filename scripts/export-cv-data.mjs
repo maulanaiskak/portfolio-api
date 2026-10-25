@@ -30,7 +30,7 @@ function load(name, exportName) {
 }
 
 const out = {
-  experience: load('experience', 'experience'),
+  experiences: load('experience', 'experience'),
   projects: load('projects', 'projects'),
   education: load('education', 'education'),
   skills: load('skills', 'skills'),

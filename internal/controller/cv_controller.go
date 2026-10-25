@@ -15,20 +15,43 @@ type CvController struct {
 
 // getCv returns experiences, projects, education and skills in one payload.
 //
-//	GET /api/v1/cv
-func (c *CvController) getCv(w http.ResponseWriter, r *http.Request) {
-	cv, err := c.cvService.GetCv(r.Context())
-	if err != nil {
+//	GET /api/v1/cv          (public, cacheable)
+//	GET /api/v1/admin/cv    (admin, no-store)
+func (c *CvController) getCv(public bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cv, err := c.cvService.GetCv(r.Context())
+		if err != nil {
+			response.Error(w, r, err)
+			return
+		}
+		if public {
+			publicCache(w)
+		}
+		response.Success(w, dto.NewCvResponse(cv))
+	}
+}
+
+// replaceCv replaces the whole CV in one transaction (the admin editor
+// saves the full document).
+//
+//	PUT /api/v1/admin/cv
+func (c *CvController) replaceCv(w http.ResponseWriter, r *http.Request) {
+	var req dto.CvRequest
+	if err := decodeJSON(r, &req); err != nil {
 		response.Error(w, r, err)
 		return
 	}
-	// Public, rarely-changing data: let the CDN / Next.js ISR cache briefly.
-	w.Header().Set("Cache-Control", "public, max-age=60, stale-while-revalidate=300")
-	response.Success(w, dto.NewCvResponse(cv))
+	if _, err := c.cvService.ImportCv(r.Context(), req.ToEntity(), true); err != nil {
+		response.Error(w, r, err)
+		return
+	}
+	c.getCv(false)(w, r)
 }
 
-func NewCvController(publicRouter chi.Router, cvService service.CvService) *CvController {
-	controller := &CvController{cvService: cvService}
-	publicRouter.Get("/cv", controller.getCv)
-	return controller
+func NewCvController(publicRouter, adminRouter chi.Router, cvService service.CvService) *CvController {
+	c := &CvController{cvService: cvService}
+	publicRouter.Get("/cv", c.getCv(true))
+	adminRouter.Get("/cv", c.getCv(false))
+	adminRouter.Put("/cv", c.replaceCv)
+	return c
 }

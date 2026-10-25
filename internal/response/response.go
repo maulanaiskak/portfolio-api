@@ -25,8 +25,8 @@ type Status struct {
 
 type Response struct {
 	Status
-	Data      any   `json:"data,omitempty"`
-	TotalData int64 `json:"total_data,omitempty"`
+	Data      any    `json:"data,omitempty"`
+	TotalData *int64 `json:"total_data,omitempty"` // set for list endpoints, even when 0
 }
 
 // HTTPError is a transport-level error (body too large, rate limited, ...)
@@ -65,9 +65,22 @@ func Success(w http.ResponseWriter, data any, totalData ...int64) {
 		Data:   data,
 	}
 	if len(totalData) != 0 {
-		resp.TotalData = totalData[0]
+		resp.TotalData = &totalData[0]
 	}
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// Created writes a 201 with the success envelope.
+func Created(w http.ResponseWriter, data any) {
+	writeJSON(w, http.StatusCreated, Response{
+		Status: Status{ResponseCode: SuccessCode, ResponseMessage: SuccessMessage},
+		Data:   data,
+	})
+}
+
+// NoContent writes a 204 with no body.
+func NoContent(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // Error writes err as the envelope. Entity and HTTP errors carry

@@ -55,7 +55,7 @@ func run(file string, replace bool) error {
 	}
 
 	cv := req.ToEntity()
-	counts, err := server.NewServices(pool).Cv.ImportCv(ctx, cv, replace)
+	counts, err := server.NewServices(cfg, pool, nil).Cv.ImportCv(ctx, cv, replace)
 	if err != nil {
 		return err
 	}
@@ -71,8 +71,8 @@ func run(file string, replace bool) error {
 	return nil
 }
 
-func readSnapshot(path string) (dto.CvImportRequest, error) {
-	var req dto.CvImportRequest
+func readSnapshot(path string) (dto.CvRequest, error) {
+	var req dto.CvRequest
 	f, err := os.Open(path)
 	if err != nil {
 		return req, err

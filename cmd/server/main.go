@@ -42,7 +42,11 @@ func run() error {
 		slog.Info("migrations applied")
 	}
 
-	svc := server.NewServices(pool)
+	storage, localFiles, err := server.NewStorage(cfg)
+	if err != nil {
+		return err
+	}
+	svc := server.NewServices(cfg, pool, storage)
 
 	if cfg.Email != "" {
 		admin, err := svc.AdminUser.EnsureAdmin(ctx, cfg.Email, cfg.PasswordBcryptHash)
@@ -52,5 +56,5 @@ func run() error {
 		slog.Info("admin user ensured", "id", admin.ID)
 	}
 
-	return server.Run(ctx, cfg, server.NewRouter(cfg, pool, svc))
+	return server.Run(ctx, cfg, server.NewRouter(cfg, pool, svc, localFiles))
 }

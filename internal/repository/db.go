@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/maulanaiskak/portfolio-api/internal/entity"
 )
 
 // DBTX is satisfied by both *pgxpool.Pool and pgx.Tx, so repositories run
@@ -72,4 +73,37 @@ func nonNil[T any](s []T) []T {
 		return []T{}
 	}
 	return s
+}
+
+// Postgres error codes mapped to entity errors.
+const (
+	pgUniqueViolation     = "23505"
+	pgCheckViolation      = "23514"
+	pgForeignKeyViolation = "23503"
+)
+
+// mapWriteError converts constraint violations into client-safe entity
+// errors; everything else is returned unchanged (and treated as internal).
+func mapWriteError(err error, what string) error {
+	var pgErr *pgconn.PgError
+	if !errors.As(err, &pgErr) {
+		return err
+	}
+	switch pgErr.Code {
+	case pgUniqueViolation:
+		return entity.NewConflictError("%s with this slug already exists", what)
+	case pgCheckViolation:
+		return entity.NewValidationError("%s has an invalid field (%s)", what, pgErr.ConstraintName)
+	case pgForeignKeyViolation:
+		return entity.NewNotFoundError("referenced %s not found", what)
+	}
+	return err
+}
+
+// nullIfEmpty stores "" as NULL for nullable text columns.
+func nullIfEmpty(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }

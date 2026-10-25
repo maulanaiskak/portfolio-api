@@ -97,16 +97,18 @@ func NewCvResponse(cv entity.Cv) CvResponse {
 	return resp
 }
 
-// CvImportRequest is the bulk-import input. Keys match the export names in
-// the old frontend's src/data/*.ts files; array order becomes sort_order.
-type CvImportRequest struct {
-	Experience []ExperienceInput    `json:"experience"`
-	Projects   []ProjectInput       `json:"projects"`
-	Education  []EducationInput     `json:"education"`
-	Skills     []SkillCategoryInput `json:"skills"`
+// CvRequest replaces the whole CV (seed import and admin PUT /cv). Keys
+// match CvResponse so the admin editor can round-trip it; ids are accepted
+// and ignored. Array order becomes sort_order.
+type CvRequest struct {
+	Experiences []ExperienceInput    `json:"experiences"`
+	Projects    []ProjectInput       `json:"projects"`
+	Education   []EducationInput     `json:"education"`
+	Skills      []SkillCategoryInput `json:"skills"`
 }
 
 type ExperienceInput struct {
+	ID                      int64                   `json:"id,omitempty"` // ignored
 	Company                 string                  `json:"company"`
 	Location                string                  `json:"location"`
 	Position                string                  `json:"position"`
@@ -117,6 +119,7 @@ type ExperienceInput struct {
 }
 
 type ProjectInput struct {
+	ID           int64    `json:"id,omitempty"` // ignored
 	Title        string   `json:"title"`
 	Description  string   `json:"description"`
 	Technologies []string `json:"technologies"`
@@ -125,6 +128,7 @@ type ProjectInput struct {
 }
 
 type EducationInput struct {
+	ID          int64  `json:"id,omitempty"` // ignored
 	Institution string `json:"institution"`
 	Location    string `json:"location"`
 	Degree      string `json:"degree"`
@@ -135,6 +139,7 @@ type EducationInput struct {
 }
 
 type SkillItemInput struct {
+	ID    int64   `json:"id,omitempty"` // ignored
 	Name  string  `json:"name"`
 	Level int     `json:"level"`
 	Note  *string `json:"note,omitempty"`
@@ -142,13 +147,14 @@ type SkillItemInput struct {
 }
 
 type SkillCategoryInput struct {
+	ID       int64            `json:"id,omitempty"` // ignored
 	Category string           `json:"category"`
 	Items    []SkillItemInput `json:"items"`
 }
 
-func (r CvImportRequest) ToEntity() entity.Cv {
+func (r CvRequest) ToEntity() entity.Cv {
 	var cv entity.Cv
-	for i, e := range r.Experience {
+	for i, e := range r.Experiences {
 		cv.Experiences = append(cv.Experiences, entity.Experience{
 			Company: e.Company, Location: e.Location, Position: e.Position, Period: e.Period,
 			Responsibilities: e.Responsibilities, ProjectsAndAchievements: e.ProjectsAndAchievements,
