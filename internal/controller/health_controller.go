@@ -18,7 +18,7 @@ type HealthController struct {
 	db Pinger
 }
 
-// healthz is the liveness/readiness probe for the host (Fly.io checks).
+// healthz is the liveness/readiness probe for the host (Render health checks).
 // It reports only up/down, with no version or dependency details.
 //
 //	GET /healthz

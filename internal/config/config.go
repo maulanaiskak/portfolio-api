@@ -22,7 +22,8 @@ type ApiConfig struct {
 	// Requests per minute allowed per client IP on public routes.
 	RateLimitPerMinute int
 	// When true, the client IP is read from ClientIPHeader, which the edge
-	// proxy must overwrite on every request (Fly.io: Fly-Client-IP).
+	// proxy must overwrite on every request (Render's Cloudflare edge:
+	// CF-Connecting-IP).
 	TrustProxy     bool
 	ClientIPHeader string
 }
@@ -105,7 +106,7 @@ func NewConfig() (Config, error) {
 			MaxBodyBytes:       int64(getEnvInt("MAX_BODY_BYTES", 1<<20)),
 			RateLimitPerMinute: getEnvInt("RATE_LIMIT_PER_MINUTE", 120),
 			TrustProxy:         getEnvBool("TRUST_PROXY", false),
-			ClientIPHeader:     getEnv("CLIENT_IP_HEADER", "Fly-Client-IP"),
+			ClientIPHeader:     getEnv("CLIENT_IP_HEADER", "CF-Connecting-IP"),
 		},
 		DbConfig: DbConfig{
 			DataSourceName:  os.Getenv("DATABASE_URL"),

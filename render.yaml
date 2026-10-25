@@ -1,0 +1,54 @@
+# Render Blueprint for portfolio-api (free web service, Singapore).
+# Render → New → Blueprint → pick this repo. Values marked `sync: false`
+# are asked for once in the dashboard and never stored in git.
+services:
+  - type: web
+    name: maulanaiskak-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: singapore
+    plan: free
+    branch: main
+    healthCheckPath: /healthz
+    # Deploy only after the GitHub CI checks on the commit pass.
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: MIGRATE_ON_BOOT
+        value: "true"
+      - key: STORAGE_DRIVER
+        value: r2
+      # Render's edge (Cloudflare) overwrites CF-Connecting-IP on every
+      # request; used for per-IP rate limiting.
+      - key: TRUST_PROXY
+        value: "true"
+      - key: CLIENT_IP_HEADER
+        value: CF-Connecting-IP
+      # Neon free tier allows few connections; the API needs only a handful.
+      - key: DB_MAX_CONNS
+        value: "5"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD_BCRYPT_HASH
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: WEB_REVALIDATE_URL
+        sync: false
+      - key: REVALIDATE_SECRET
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        value: portfolio-images
+      - key: R2_PUBLIC_BASE_URL
+        sync: false

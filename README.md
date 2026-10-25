@@ -92,5 +92,5 @@ Reload the CV after editing `seed/cv.json`: `go run ./cmd/seedcv -replace`.
 - Login: same error and same bcrypt cost for unknown email vs wrong password (no account enumeration), 5 attempts/min per IP.
 - Uploads: format detected from bytes (not filename/Content-Type), JPEG/PNG/WebP only, ≤40MP, re-encoded server-side, which strips EXIF/GPS metadata (orientation applied first) and caps size at 2560px. Keys are random UUIDs.
 - Strict JSON decoding: unknown fields, trailing data and oversized bodies are rejected.
-- Client IP for rate limiting comes from the edge proxy's own header (`Fly-Client-IP`), not spoofable `X-Forwarded-For`, and only when `TRUST_PROXY=true`.
-- Distroless, non-root container image; secrets come from the host (Fly secrets), never from git. CI runs `go vet`, race tests and `govulncheck`.
+- Client IP for rate limiting comes from the edge proxy's own header (`CF-Connecting-IP` on Render), not spoofable `X-Forwarded-For`, and only when `TRUST_PROXY=true`.
+- Distroless, non-root container image; secrets come from the host (Render environment), never from git. CI runs `go vet`, race tests and `govulncheck`.
