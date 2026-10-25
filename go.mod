@@ -1,6 +1,6 @@
 module github.com/maulanaiskak/portfolio-api
 
-go 1.26.0
+go 1.27.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.47.4
@@ -30,12 +30,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.20.7 // indirect
 	github.com/aws/smithy-go v1.28.6 // indirect
-	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa // indirect
+	github.com/jackc/pgerrcode v0.0.0-20250907135507-afb5586c32a6 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
-	github.com/zeebo/xxh3 v1.0.2 // indirect
+	github.com/jackc/puddle/v2 v2.2.3 // indirect
+	github.com/klauspost/cpuid/v2 v2.4.1 // indirect
+	github.com/zeebo/xxh3 v1.1.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 )
