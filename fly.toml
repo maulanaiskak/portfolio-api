@@ -1,7 +1,7 @@
-# Fly.io config for portfolio-api. Change `app` to your Fly app name.
+# Fly.io config for portfolio-api (Fly app: maulanaiskak-api).
 # Secrets (DATABASE_URL, JWT_SECRET, ADMIN_*, R2_*, REVALIDATE_SECRET,
 # CORS_ORIGIN, ...) are set with `fly secrets set`, never here.
-app = "portfolio-api"
+app = "maulanaiskak-api"
 primary_region = "sin" # Singapore — closest Fly region to Indonesia
 
 [build]

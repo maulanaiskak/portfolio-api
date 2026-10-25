@@ -4,7 +4,7 @@ Production layout: **portfolio-api** on Fly.io (Go binary), Postgres on Fly Mana
 
 Pick the two public names first; several settings reference them:
 
-- **API**: `https://<api-app>.fly.dev` (the Fly app name is global, e.g. `maulanaiskak-api`; set `app` in `fly.toml` to match)
+- **API**: `https://maulanaiskak-api.fly.dev` (the Fly app name is global, already set in `fly.toml`)
 - **Web**: `https://<web-project>.vercel.app` or your own domain
 
 ## 1. Cloudflare R2 (images)
@@ -24,7 +24,7 @@ fly auth login
 ```
 
 ```bash
-fly apps create <api-app>
+fly apps create maulanaiskak-api
 ```
 
 ### Database
@@ -34,15 +34,15 @@ Fly's self-run `fly postgres` clusters are deprecated; use one of:
 - **Fly Managed Postgres** (paid; same private network, backups handled):
 
   ```bash
-  fly mpg create --name <api-app>-db --region sin
+  fly mpg create --name maulanaiskak-api-db --region sin
   ```
 
   ```bash
-  fly mpg attach <cluster-id> --app <api-app>   # sets the DATABASE_URL secret
+  fly mpg attach <cluster-id> --app maulanaiskak-api   # sets the DATABASE_URL secret
   ```
 
 - **Neon** (free tier; region Singapore): create a project, copy the pooled connection string (it includes `sslmode=require`), then
-  `fly secrets set --stage --app <api-app> DATABASE_URL='postgres://...'`.
+  `fly secrets set --stage --app maulanaiskak-api DATABASE_URL='postgres://...'`.
 
 ### Secrets
 
@@ -59,7 +59,7 @@ openssl rand -hex 32
 ```
 
 ```bash
-fly secrets set --stage --app <api-app> \
+fly secrets set --stage --app maulanaiskak-api \
   JWT_SECRET="$(openssl rand -base64 48)" \
   ADMIN_EMAIL="you@example.com" \
   ADMIN_PASSWORD_BCRYPT_HASH='$2a$12$...paste...' \
@@ -80,13 +80,13 @@ fly deploy
 ```
 
 ```bash
-curl https://<api-app>.fly.dev/healthz
+curl https://maulanaiskak-api.fly.dev/healthz
 ```
 
 Seed the CV through the admin API (prompts for the admin password; replaces any stored CV):
 
 ```bash
-scripts/seed-remote.sh https://<api-app>.fly.dev you@example.com
+scripts/seed-remote.sh https://maulanaiskak-api.fly.dev you@example.com
 ```
 
 ### CI/CD
@@ -94,7 +94,7 @@ scripts/seed-remote.sh https://<api-app>.fly.dev you@example.com
 `.github/workflows/deploy.yml` deploys on every push to `main` after tests pass. Create a deploy token:
 
 ```bash
-fly tokens create deploy --app <api-app>
+fly tokens create deploy --app maulanaiskak-api
 ```
 
 Store it as an Actions secret named `FLY_API_TOKEN` in a GitHub environment called `production` (repo → Settings → Environments → New environment → `production` → Add secret).
@@ -111,7 +111,7 @@ Import the `portfolio-web` repository at vercel.com/new (framework Next.js, defa
 
 | Variable | Value |
 |---|---|
-| `NEXT_PUBLIC_API_BASE_URL` | `https://<api-app>.fly.dev` |
+| `NEXT_PUBLIC_API_BASE_URL` | `https://maulanaiskak-api.fly.dev` |
 | `NEXT_PUBLIC_IMAGE_ORIGINS` | same as `R2_PUBLIC_BASE_URL` |
 | `NEXT_PUBLIC_SITE_URL` | `https://<web-project>.vercel.app` |
 | `REVALIDATE_SECRET` | same as the API (mark **Sensitive**) |
